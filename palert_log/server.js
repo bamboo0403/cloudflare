@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = 3000;
@@ -11,8 +12,13 @@ app.use(express.static(__dirname));
 
 const TARGET_DIR = 'E:\\Code\\P-Alert\\dev\\P-Alert\\log';
 
-// 處理根路徑和 /log.html 路徑
-app.get(['/', '/log.html'], (req, res) => {
+// 根路徑重定向到 log.html
+app.get('/', (req, res) => {
+    res.redirect('/log.html');
+});
+
+// 處理 log.html 路徑
+app.get(['/log.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'log.html'));
 });
 
@@ -22,9 +28,9 @@ app.get('/files', (req, res) => {
         const offset = parseInt(req.query.offset) || 0;
 
         if (!fs.existsSync(TARGET_DIR)) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: '目錄不存在',
-                path: TARGET_DIR 
+                path: TARGET_DIR
             });
         }
 
@@ -43,7 +49,7 @@ app.get('/files', (req, res) => {
                 return null;
             }
         }).filter(file => file !== null && file.isFile)
-          .sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
+            .sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
 
         const totalCount = fileDetails.length;
         const paginatedFiles = fileDetails.slice(offset, offset + limit);
@@ -63,7 +69,7 @@ app.get('/file-content/:filename', (req, res) => {
     try {
         const filename = req.params.filename;
         const filePath = path.join(TARGET_DIR, filename);
-        
+
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ error: '檔案不存在' });
         }
@@ -76,6 +82,14 @@ app.get('/file-content/:filename', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`伺服器運行在 http://localhost:${PORT}`);
-    console.log(`訪問 http://localhost:${PORT}/log.html 來查看日誌瀏覽器`);
+    try {
+        if (process.platform === 'win32') {
+            exec(`start http://localhost:${PORT}`);
+        } else {
+            exec(`open http://localhost:${PORT}`);
+        }
+        console.log(`website is running at: http://localhost:${PORT}`);
+    } catch (error) {
+        console.error('無法開啟瀏覽器:', error);
+    }
 }); 
