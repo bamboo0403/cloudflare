@@ -12,13 +12,7 @@ app.use(express.static(__dirname));
 
 const TARGET_DIR = 'E:\\Code\\P-Alert\\dev\\P-Alert\\log';
 
-// 根路徑重定向到 log.html
-app.get('/', (req, res) => {
-    res.redirect('/log.html');
-});
-
-// 處理 log.html 路徑
-app.get(['/log.html'], (req, res) => {
+app.get(['/', '/log.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'log.html'));
 });
 
