@@ -1,0 +1,16 @@
+tunnel: log
+tunnel_id: 904f4af6-a6ad-406a-ab36-ba7a506dcb13
+credentials:
+  account: 566c8913f409873860b6835220a90f65
+  tunnel_secret: XSfH5dCE3yE2EYm94wGtJz8bT8Exyf6KRIiOeq9bF0g=
+ingress:
+  - hostname: 904037.xyz
+    service: http://localhost:3000
+    path: /log.html
+  - hostname: 904037.xyz
+    path: /files
+    service: http://localhost:3000
+  - hostname: 904037.xyz
+    path: /file-content/*
+    service: http://localhost:3000
+  - service: http_status:403

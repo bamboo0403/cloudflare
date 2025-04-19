@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-Alert Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .container {
+            margin: 0 auto;
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #2d2d2d;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #3d3d3d;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #3d3d3d;
+        }
+        .file-link {
+            color: #4a9eff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .file-link:hover {
+            text-decoration: underline;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d2d2d;
+            padding: 20px;
+            width: 450px;
+            max-height: 80vh;
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+        .close-button {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .close-button:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        #modalTitle {
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 0;
+            font-size: 20px;
+            color: #fff;
+        }
+        .file-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-radius: 4px;
+            margin-top: 20px;
+            user-select: none;
+        }
+        .error {
+            color: #ff6b6b;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ff6b6b;
+            border-radius: 4px;
+        }
+        .load-more {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #3d3d3d;
+            border: none;
+            border-radius: 4px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .load-more:hover {
+            background-color: #4a4a4a;
+        }
+        .load-more:disabled {
+            background-color: #2d2d2d;
+            color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>P-Alert Log</h1>
+        <div id="fileList">
+            <table>
+                <thead>
+                    <tr>
+                        <th>檔案名稱</th>
+                        <th>觸發時間</th>
+                        <th>持續時間</th>
+                        <th>最大震度</th>
+                        <th>最大 GAL</th>
+                        <th>觸發站數</th>
+                        <th>多久前</th>
+                    </tr>
+                </thead>
+                <tbody id="fileTableBody">
+                    <tr>
+                        <td colspan="7" class="loading-message">正在載入檔案列表...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button id="loadMoreBtn" class="load-more" onclick="loadMore()">載入更多</button>
+        </div>
+    </div>
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" onclick="closeModal()"></button>
+            <h2 id="modalTitle"></h2>
+            <div id="fileContent" class="file-content"></div>
+        </div>
+    </div>
+    <script>
+        let currentOffset = 0;
+        const ITEMS_PER_PAGE = 5;
+        let hasMore = true;
+
+        async function viewFileContent(filename) {
+            try {
+                const response = await fetch(`/file-content/${encodeURIComponent(filename)}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // 解析檔案內容以獲取時間
+                    const lines = data.content.split('\n');
+                    let timestamp = '';
+                    if (lines.length > 1) {
+                        const secondLine = lines[1];
+                        const timeMatch = secondLine.match(/：(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+                        if (timeMatch) {
+                            timestamp = timeMatch[1];
+                        }
+                    }
+                    
+                    document.getElementById('modalTitle').textContent = `${filename}`;
+                    document.getElementById('fileContent').textContent = data.content;
+                    document.getElementById('fileModal').style.display = 'block';
+                } else {
+                    alert(`無法讀取檔案: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`讀取檔案時發生錯誤: ${error.message}`);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('fileModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('fileModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        async function loadMore() {
+            try {
+                const response = await fetch(`/files?offset=${currentOffset}&limit=${ITEMS_PER_PAGE}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || '載入檔案列表失敗');
+                }
+
+                const tbody = document.getElementById('fileTableBody');
+                
+                if (currentOffset === 0) {
+                    tbody.innerHTML = '';
+                }
+
+                // 一次性獲取所有檔案的內容
+                const filePromises = data.files.map(async (file) => {
+                    try {
+                        const contentResponse = await fetch(`/file-content/${encodeURIComponent(file.name)}`);
+                        const contentData = await contentResponse.json();
+                        
+                        if (contentResponse.ok) {
+                            const lines = contentData.content.split('\n');
+                            if (lines.length > 1) {
+                                // 提取時間
+                                const secondLine = lines[1];
+                                const timeMatch = secondLine.match(/：(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+                                if (timeMatch) {
+                                    file.timestamp = timeMatch[1];
+                                }
+
+                                // 提取持續時間
+                                for (const line of lines) {
+                                    const durationMatch = line.match(/持續時間：(\d+)\s*秒/);
+                                    if (durationMatch) {
+                                        file.duration = durationMatch[1] + ' 秒';
+                                        break;
+                                    }
+                                }
+
+                                // 提取最大震度、GAL和觸發站數
+                                for (const line of lines) {
+                                    const maxInfoMatch = line.match(/最大震度([０-９]|[一二三四五六七])　.*?(\d+\.\d+)\s*gal.*?觸發站數：(\d+)/);
+                                    if (maxInfoMatch) {
+                                        file.maxIntensity = maxInfoMatch[1];
+                                        file.maxGal = maxInfoMatch[2];
+                                        file.stationCount = maxInfoMatch[3];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`無法讀取檔案 ${file.name} 的內容:`, error);
+                    }
+                    return file;
+                });
+
+                // 等待所有檔案內容都讀取完成
+                const processedFiles = await Promise.all(filePromises);
+
+                // 一次性更新表格
+                processedFiles.forEach((file) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><a class="file-link" onclick="viewFileContent('${file.name}')">${file.name}</a></td>
+                        <td>${file.timestamp || '無時間資訊'}</td>
+                        <td>${file.duration || '無資料'}</td>
+                        <td>${file.maxIntensity || '無資料'}</td>
+                        <td>${file.maxGal || '無資料'}</td>
+                        <td>${file.stationCount || '無資料'}</td>
+                        <td>${file.timestamp ? formatTimeAgo(file.timestamp) : '無資料'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                hasMore = data.hasMore;
+                currentOffset += data.files.length;
+                
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.disabled = !hasMore;
+                loadMoreBtn.textContent = hasMore ? '載入更多' : '已顯示全部檔案';
+            } catch (error) {
+                document.getElementById('fileTableBody').innerHTML = `
+                    <tr><td colspan="7" class="error">載入檔案列表時發生錯誤: ${error.message}</td></tr>
+                `;
+            }
+        }
+
+        function formatTimeAgo(timestamp) {
+            const now = new Date();
+            const eventTime = new Date(timestamp);
+            const diffInSeconds = Math.floor((now - eventTime) / 1000);
+
+            if (diffInSeconds < 60) {
+                return `${diffInSeconds} 秒`;
+            }
+
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} 分鐘`;
+            }
+
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} 小時`;
+            }
+
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 30) {
+                return `${diffInDays} 天`;
+            }
+
+            const diffInMonths = Math.floor(diffInDays / 30);
+            if (diffInMonths < 12) {
+                return `${diffInMonths} 個月`;
+            }
+
+            const diffInYears = Math.floor(diffInMonths / 12);
+            return `${diffInYears} 年image.png`;
+        }
+
+        function updateTimeAgo() {
+            const rows = document.getElementById('fileTableBody').getElementsByTagName('tr');
+            for (const row of rows) {
+                const timestampCell = row.querySelector('td:nth-child(2)');
+                const timeAgoCell = row.querySelector('td:nth-child(3)');
+                if (timestampCell && timeAgoCell && timestampCell.textContent !== '無時間資訊') {
+                    timeAgoCell.textContent = formatTimeAgo(timestampCell.textContent);
+                }
+            }
+        }
+
+        window.onload = () => {
+            currentOffset = 0;
+            loadMore();
+        };
+    </script>
+</body>
+</html>
