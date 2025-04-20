@@ -10,7 +10,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.static(__dirname));
 
-const TARGET_DIR = 'E:\\Code\\P-Alert\\dev\\P-Alert\\log';
+const TARGET_DIR = path.join(__dirname, 'logs');
 
 app.get(['/', '/log.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'log.html'));
@@ -22,10 +22,7 @@ app.get('/files', (req, res) => {
         const offset = parseInt(req.query.offset) || 0;
 
         if (!fs.existsSync(TARGET_DIR)) {
-            return res.status(404).json({
-                error: '目錄不存在',
-                path: TARGET_DIR
-            });
+            fs.mkdirSync(TARGET_DIR, { recursive: true });
         }
 
         const files = fs.readdirSync(TARGET_DIR);
@@ -58,7 +55,6 @@ app.get('/files', (req, res) => {
     }
 });
 
-// 添加檔案內容讀取路由
 app.get('/file-content/:filename', (req, res) => {
     try {
         const filename = req.params.filename;
@@ -82,8 +78,8 @@ app.listen(PORT, () => {
         } else {
             exec(`open http://localhost:${PORT}`);
         }
-        console.log(`website is running at: http://localhost:${PORT}`);
+        console.log(`網站運行於: http://localhost:${PORT}`);
     } catch (error) {
         console.error('無法開啟瀏覽器:', error);
     }
-}); 
+});

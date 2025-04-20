@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 10px;
             background-color: #1e1e1e;
             color: #ffffff;
             user-select: none;
@@ -18,29 +18,34 @@
         .container {
             margin: 0 auto;
             background-color: #2d2d2d;
-            padding: 20px;
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            overflow-x: auto;
         }
         h1 {
             color: #ffffff;
             margin-bottom: 20px;
+            font-size: 24px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             background-color: #2d2d2d;
+            min-width: 800px;
         }
         th, td {
-            padding: 12px;
+            padding: 12px 8px;
             text-align: center;
             border-bottom: 1px solid #444;
+            font-size: 14px;
         }
         th {
             background-color: #3d3d3d;
             font-weight: bold;
+            white-space: nowrap;
         }
         tr:hover {
             background-color: #3d3d3d;
@@ -49,6 +54,8 @@
             color: #4a9eff;
             text-decoration: none;
             cursor: pointer;
+            padding: 8px;
+            display: inline-block;
         }
         .file-link:hover {
             text-decoration: underline;
@@ -70,14 +77,15 @@
             transform: translate(-50%, -50%);
             background-color: #2d2d2d;
             padding: 20px;
-            width: 450px;
+            width: 90%;
+            max-width: 450px;
             max-height: 80vh;
             border-radius: 8px;
             overflow-y: auto;
         }
         .close-button {
             position: absolute;
-            right: 20px;
+            right: 10px;
             top: 10px;
             font-size: 24px;
             cursor: pointer;
@@ -85,12 +93,15 @@
             background: none;
             border: none;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+        }
+        .close-button::after {
+            content: "×";
         }
         .close-button:hover {
             color: #fff;
@@ -99,9 +110,10 @@
         #modalTitle {
             text-align: center;
             margin: 0 0 20px 0;
-            padding: 0;
-            font-size: 20px;
+            padding: 0 40px;
+            font-size: 18px;
             color: #fff;
+            word-break: break-all;
         }
         .file-content {
             font-family: monospace;
@@ -111,6 +123,8 @@
             border-radius: 4px;
             margin-top: 20px;
             user-select: none;
+            font-size: 14px;
+            overflow-x: auto;
         }
         .error {
             color: #ff6b6b;
@@ -122,14 +136,14 @@
         .load-more {
             display: block;
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin-top: 20px;
             background-color: #3d3d3d;
             border: none;
             border-radius: 4px;
             color: #ffffff;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             transition: background-color 0.2s;
         }
         .load-more:hover {
@@ -139,6 +153,37 @@
             background-color: #2d2d2d;
             color: #666;
             cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+            body {
+                margin: 5px;
+            }
+            .container {
+                padding: 5px;
+            }
+            h1 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            th, td {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            #modalTitle {
+                font-size: 16px;
+                padding: 0 35px;
+            }
+            .file-content {
+                font-size: 12px;
+            }
+            .load-more {
+                padding: 12px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
