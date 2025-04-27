@@ -10,7 +10,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.static(__dirname));
 
-const TARGET_DIR = path.join(__dirname, 'logs');
+const TARGET_DIR = 'E:\\Code\\P-Alert\\dev\\P-Alert\\log';
 
 app.get(['/', '/log.html'], (req, res) => {
     res.sendFile(path.join(__dirname, 'log.html'));
